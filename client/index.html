@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" type="text/css" href="./contrib/bulma.css">
+    <title>Robo Blocks</title>
+    <script src="./blocks.js"></script>
+    <style>
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+
+        #slots .button {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <nav class="level mx-2 mt-2 mb-6">
+        <div class="level-left"><h1 class="title level-item" id="logo">Robo Blocks</h1></div>
+        <div class="level-right">
+            <button class="button level-item is-success is-light" id="run"><strong>Run</strong></button>
+            <button class="button level-item is-danger is-light">Emergency Stop</button>
+        </div>
+    </nav>
+    <div class="columns" style="height: 80%;">
+        <div class="column is-11">
+            <div id="blocklyArea" style="width: 100%; height: 100%;"></div>
+        </div>
+        <div class="column is-1" id="slots">
+            <button class="button is-link my-2 mr-2">Slot 1</button>
+            <button class="button my-2 mr-2">Slot 2</button>
+            <button class="button my-2 mr-2">Slot 3</button>
+            <button class="button my-2 mr-2">Slot 4</button>
+            <button class="button my-2 mr-2">Slot 5</button>
+        </div>
+    </div>
+
+    <div id="blocklyDiv" style="position: absolute"></div>
+    
+    <xml id="toolbox" style="display: none">
+        <category name="Events" colour="360">
+            <block type="event_started"></block>
+            <block type="event_button"></block>
+        </category>
+        <category name="Logic & Flow" colour="%{BKY_LOGIC_HUE}">
+            <block type="wait"></block>
+            <block type="controls_repeat"></block>
+            <block type="controls_if"></block>
+            <block type="logic_operation"></block>
+            <block type="sync"></block>
+        </category>
+        <category name="Interaction" colour="%{BKY_TEXTS_HUE}">
+            <block type="say"></block>
+            <block type="light_test"></block>
+            <block type="light_set"></block>
+            <block type="move_arm"></block>
+            <block type="angle_input"></block>
+            <block type="fixed_angle_input"></block>
+        </category>
+    </xml>
+</body>
+</html>
