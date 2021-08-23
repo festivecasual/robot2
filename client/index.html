@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" type="text/css" href="./contrib/bulma.css">
-    <title>Robo Blocks</title>
+    <title>ROSie</title>
     <script src="./blocks.js"></script>
     <style>
         html, body {
@@ -21,7 +21,7 @@
 </head>
 <body>
     <nav class="level mx-2 mt-2 mb-6">
-        <div class="level-left"><h1 class="title level-item" id="logo">Robo Blocks</h1></div>
+        <div class="level-left"><h1 class="title level-item" id="logo">ROSie</h1></div>
         <div class="level-right">
             <button class="button level-item is-success is-light" id="run"><strong>Run</strong></button>
             <button class="button level-item is-danger is-light">Emergency Stop</button>
@@ -57,6 +57,8 @@
         <category name="Interaction" colour="%{BKY_TEXTS_HUE}">
             <block type="say"></block>
             <block type="light_set"></block>
+            <block type="roll"></block>
+            <block type="turn"></block>
             <block type="move_arm"></block>
             <block type="angle_input"></block>
             <block type="fixed_angle_input"></block>

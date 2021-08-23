@@ -76,6 +76,70 @@ Blockly.Python['light_set'] = function(block) {
     return set_expression(which_side);
 };
 
+var rollBlock = {
+    "type": "roll",
+    "message0": "roll %1 for %2 second(s)",
+    "args0": [
+        {
+            "type": "field_dropdown",
+            "name": "which_direction",
+            "options": [ ["forward", "forward"], ["backward", "backward"] ],
+        },
+        {
+            "type": "field_number",
+            "name": "seconds",
+            "check": "Number",
+            "value": 2,
+            "min": 0,
+            "max": 20,
+        },
+    ],
+    "previousStatement": null,
+    "nextStatement": null,
+    "colour": 300,
+    "tooltip": "Move straight forward or backward.",
+};
+Blockly.Blocks['roll'] = { init: function() { this.jsonInit(rollBlock); } };
+Blockly.Python['roll'] = function(block) {
+    var which_direction = block.getFieldValue('which_direction');
+    function set_expression(which_direction) {
+        return `robot.roll('${which_direction}', ${block.getFieldValue('seconds')})\n`;
+    }
+    return set_expression(which_direction);
+};
+
+var turnBlock = {
+    "type": "turn",
+    "message0": "turn %1 for %2 second(s)",
+    "args0": [
+        {
+            "type": "field_dropdown",
+            "name": "which_direction",
+            "options": [ ["clockwise", "clockwise"], ["counterclockwise", "counterclockwise"] ],
+        },
+        {
+            "type": "field_number",
+            "name": "seconds",
+            "check": "Number",
+            "value": 2,
+            "min": 0,
+            "max": 20,
+        },
+    ],
+    "previousStatement": null,
+    "nextStatement": null,
+    "colour": 300,
+    "tooltip": "Rotate in a clockwise or counterclockwise direction.",
+};
+Blockly.Blocks['turn'] = { init: function() { this.jsonInit(turnBlock); } };
+Blockly.Python['turn'] = function(block) {
+    var which_direction = block.getFieldValue('which_direction');
+    function set_expression(which_direction) {
+        return `robot.turn('${which_direction}', ${block.getFieldValue('seconds')})\n`;
+    }
+    return set_expression(which_direction);
+};
+
 var armMoveBlock = {
     "type": "move_arm",
     "message0": "move %1 %2",
@@ -241,10 +305,12 @@ document.addEventListener('DOMContentLoaded', function(e) {
     Blockly.svgResize(workspace);
 
     workspace.addChangeListener(function(e){
-        if (e.type === 'ui') {
+        if (e.isUiEvent) {
             return;
         } else {
-            return;
+            var xml = Blockly.Xml.workspaceToDom(workspace, true);
+            var data = Blockly.Xml.domToText(xml);
+            alert(data);
         }
     });
 }, false);

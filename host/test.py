@@ -4,6 +4,22 @@ import asyncio
 program = """
 @robot.when_started
 def started():
+    with robot.in_sync():
+        robot.say('They see me rollin')
+        robot.roll('forward', 1)
+    robot.roll('backward', 1)
+    with robot.in_sync():
+        robot.say('They hatin')
+        robot.turn('clockwise', 1)
+    robot.turn('counterclockwise', 1)
+    robot.set_eye_state('both', 'on')
+    robot.wait(1)
+    robot.set_eye_state('both', 'off')
+"""
+
+program1 = """
+@robot.when_started
+def started():
     robot.set_antenna_state('both', 'on')
     robot.say("ready")
     robot.say("set")

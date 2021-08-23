@@ -116,6 +116,34 @@ class Routine:
             await asyncio.sleep(0.5)
         self.enqueue(move_arm_async())
 
+    def roll(self, direction, secs):
+        if direction == 'forward':
+            speed = 1
+        elif direction == 'backward':
+            speed = -1
+        else:
+            raise NameError('No such direction: ' + direction)
+        
+        async def roll_async():
+            self.robot.wheels.go(speed, speed)
+            await asyncio.sleep(secs)
+            self.robot.wheels.stop()
+        self.enqueue(roll_async())
+    
+    def turn(self, direction, secs):
+        if direction == 'clockwise':
+            left, right = 1, -1
+        elif direction == 'counterclockwise':
+            left, right = -1, 1
+        else:
+            raise NameError('No such direction: ' + direction)
+        
+        async def turn_async():
+            self.robot.wheels.go(left, right)
+            await asyncio.sleep(secs)
+            self.robot.wheels.stop()
+        self.enqueue(turn_async())
+
     def when_started(self, f):
         async def event_function():
             f()
