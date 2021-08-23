@@ -1,61 +1,66 @@
-import sys
-
-import busio
-import RPi.GPIO as GPIO
-from board import SCL, SDA
-from adafruit_pca9685 import PCA9685
-
-from control import Wheels, Arm, Light
+import asyncio
 
 
-# Set up GPIO for BCM pin number references
-GPIO.setmode(GPIO.BCM)
+program = """
+@robot.when_started
+def started():
+    robot.say('HI')
+    robot.wait(2)
+    robot.set_antenna_state('both', 'on')
+    robot.set_eye_state('both', 'on')
+    robot.wait(1)
+    robot.move_arm('both', 90)
+    robot.wait(1)
+    with robot.in_sync():
+        robot.say('  LEFT')
+        robot.set_antenna_state('left', 'off')
+        robot.set_eye_state('left', 'off')
+        robot.move_arm('left', -90)
+    robot.say('  ... done!')
+    robot.wait(1)
+    with robot.in_sync():
+        robot.say('  RIGHT')
+        robot.set_antenna_state('right', 'off')
+        robot.set_eye_state('right', 'off')
+        robot.move_arm('right', -90)
+    robot.say('  ... done!')
+    robot.wait(2)
+    robot.say('BYE')
+"""
 
-# Initialize the PCA9685 servo controller
-pca = PCA9685(busio.I2C(SCL, SDA))
-pca.frequency = 60
 
-# Wheels
-wheels = Wheels(pca)
+async def client_run_command():
+    await asyncio.sleep(3)
 
-# Arms
-left_arm = Arm(pca, 4, lambda t: 180 - t)
-right_arm = Arm(pca, 5)
+    reader, writer = await asyncio.open_unix_connection('/tmp/robot-control')
+    
+    payload = program.encode()
+    header = ('RUN\n' + str(len(payload)) + '\n').encode()
+    writer.write(header)
+    writer.write(payload)
+    await writer.drain()
+    
+    recv = await reader.read()
+    reply = recv.decode()
+    print('Reply from RUN command:', reply)
+    
+    writer.close()
+    await writer.wait_closed()
 
-# Lights
-left_antenna = Light(26)
-right_antenna = Light(13)
-left_eye = Light(6)
-right_eye = Light(19)
 
-input()
+async def client_stop_command():
+    await asyncio.sleep(5)
 
-left_arm.move(90)
-right_arm.move(180)
-input()
-left_arm.move(180)
-right_arm.move(90)
-input()
-left_arm.move(0)
-right_arm.move(0)
-input()
-
-left_antenna.on()
-right_antenna.on()
-left_eye.on()
-right_eye.on()
-input()
-
-wheels.go()
-input()
-wheels.stop()
-input()
-wheels.go(-1)
-input()
-wheels.stop()
-input()
-
-left_antenna.off()
-right_antenna.off()
-left_eye.off()
-right_eye.off()
+    reader, writer = await asyncio.open_unix_connection('/tmp/robot-control')
+    
+    payload = program.encode()
+    header = ('STOP\n').encode()
+    writer.write(header)
+    await writer.drain()
+    
+    recv = await reader.read()
+    reply = recv.decode()
+    print('Reply from STOP command:', reply)
+    
+    writer.close()
+    await writer.wait_closed()

@@ -15,9 +15,9 @@ class Wheels:
 
         self.stop()
 
-    def go(self, speed=1.0):
-        self.motor0.throttle = self.motor2.throttle = 0.125 - 0.125 * speed
-        self.motor1.throttle = self.motor3.throttle = 0.125 + 0.125 * speed
+    def go(self, left_speed=1.0, right_speed=1.0):
+        self.motor1.throttle = self.motor3.throttle = 0.125 + 0.125 * left_speed
+        self.motor0.throttle = self.motor2.throttle = 0.125 - 0.125 * right_speed
 
     def stop(self):
         self.motor0.throttle = self.motor1.throttle = self.motor2.throttle = self.motor3.throttle = 0.125

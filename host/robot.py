@@ -1,4 +1,5 @@
 import asyncio
+import sys
 
 import busio
 import RPi.GPIO as GPIO
@@ -157,13 +158,34 @@ class Robot:
         self.joystick = Joystick()
         self.joystick.register(loop)
         self.joystick.add_button_callback('start', self.start_button)
+        self.joystick.add_axis_callback('x', self.joystick_locomote)
+        self.joystick.add_axis_callback('y', self.joystick_locomote)
 
         self.routine = None
 
         self.active_actions = []
 
     def start_button(self, joystick, button, state):
-        print(button, state)
+        self.stop()
+
+    def joystick_locomote(self, joystick, axis, state):
+        # Ignore joystick axis inputs when a routine is active
+        if self.routine:
+            return
+
+        x_vector, y_vector = -joystick.axis_states['x'], -joystick.axis_states['y']
+
+        # Motor solutions taken from: http://home.kendra.com/mauser/joystick.html
+        v = y_vector * (2 - abs(x_vector))
+        w = x_vector * (2 - abs(y_vector))
+        L = (v - w) / 2.0
+        R = (v + w) / 2.0
+        self.wheels.go(L, R)
+
+    def stop(self):
+        self.routine = None
+        for action in self.active_actions:
+            action.cancel()
 
     async def handle_connection(self, reader, writer):
         recv = await reader.readline()
@@ -197,9 +219,7 @@ class Robot:
         await writer.wait_closed()
 
     async def handle_STOP(self, reader, writer):
-        self.routine = None
-        for action in self.active_actions:
-            action.cancel()
+        self.stop()
         writer.write('OK'.encode())
         await writer.drain()
         writer.close()
@@ -215,77 +235,13 @@ class Robot:
             self.active_actions.remove(action)
 
 
-program = """
-@robot.when_started
-def started():
-    robot.say('HI')
-    robot.wait(2)
-    robot.set_antenna_state('both', 'on')
-    robot.set_eye_state('both', 'on')
-    robot.wait(1)
-    robot.move_arm('both', 90)
-    robot.wait(1)
-    with robot.in_sync():
-        robot.say('  LEFT')
-        robot.set_antenna_state('left', 'off')
-        robot.set_eye_state('left', 'off')
-        robot.move_arm('left', -90)
-    robot.say('  ... done!')
-    robot.wait(1)
-    with robot.in_sync():
-        robot.say('  RIGHT')
-        robot.set_antenna_state('right', 'off')
-        robot.set_eye_state('right', 'off')
-        robot.move_arm('right', -90)
-    robot.say('  ... done!')
-    robot.wait(2)
-    robot.say('BYE')
-"""
-
-
-async def client_run_command():
-    await asyncio.sleep(3)
-
-    reader, writer = await asyncio.open_unix_connection('/tmp/robot-control')
-    
-    payload = program.encode()
-    header = ('RUN\n' + str(len(payload)) + '\n').encode()
-    writer.write(header)
-    writer.write(payload)
-    await writer.drain()
-    
-    recv = await reader.read()
-    reply = recv.decode()
-    print('Reply from RUN command:', reply)
-    
-    writer.close()
-    await writer.wait_closed()
-
-
-async def client_stop_command():
-    await asyncio.sleep(5)
-
-    reader, writer = await asyncio.open_unix_connection('/tmp/robot-control')
-    
-    payload = program.encode()
-    header = ('STOP\n').encode()
-    writer.write(header)
-    await writer.drain()
-    
-    recv = await reader.read()
-    reply = recv.decode()
-    print('Reply from STOP command:', reply)
-    
-    writer.close()
-    await writer.wait_closed()
-
-
 async def main():
     loop = asyncio.get_event_loop()
-
     robot = Robot(loop)
 
-    asyncio.create_task(client_run_command())
+    if len(sys.argv) > 1 and sys.argv[1] == 'test_program':
+        import test
+        asyncio.create_task(test.client_run_command())
 
     server = await asyncio.start_unix_server(robot.handle_connection, '/tmp/robot-control')
     async with server:
