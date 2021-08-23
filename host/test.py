@@ -4,6 +4,32 @@ import asyncio
 program = """
 @robot.when_started
 def started():
+    robot.set_antenna_state('both', 'on')
+    robot.say("ready")
+    robot.say("set")
+    robot.say("go")
+
+@robot.when_button_pressed(1)
+def button():
+    robot.say("one")
+
+@robot.when_button_pressed(2)
+def button():
+    robot.say("two")
+
+@robot.when_button_pressed(3)
+def button():
+    robot.say("three")
+
+@robot.when_button_pressed(4)
+def button():
+    robot.say("four")
+"""
+
+
+program2 = """
+@robot.when_started
+def started():
     robot.say("Let's get started.")
     robot.set_antenna_state('both', 'on')
     robot.set_eye_state('both', 'on')

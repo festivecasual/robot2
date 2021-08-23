@@ -15,6 +15,7 @@ class Routine:
         self.sync_level = 0
         self.sync_queue = []
         self.on_started = []
+        self.on_button = {button : [] for button in ['b1', 'b2', 'b3', 'b4']}
         self.robot = robot
 
     def enqueue(self, action):
@@ -28,9 +29,9 @@ class Routine:
         self.sync_queue = []
 
     async def flush_queue(self):
-        for coro in self.action_queue:
+        while len(self.action_queue) > 0:
+            coro = self.action_queue.pop(0)
             await coro
-        self.action_queue = []
 
     def in_sync(self):
         routine = self
@@ -122,9 +123,25 @@ class Routine:
         self.on_started.append(event_function)
         return event_function
 
+    def when_button_pressed(self, button_number):
+        routine = self
+        def decorator(f_):
+            if not 1 <= button_number <= 4:
+                raise NameError('Button does not exist or cannot be used: ' + str(button_number))
+            button = 'b' + str(button_number)
+            async def event_function():
+                f_()
+                await routine.flush_queue()
+            routine.on_button[button].append(event_function)
+            return event_function
+        return decorator
+
     async def start(self):
-        await self.flush_queue()
         for f in self.on_started:
+            await f()
+    
+    async def button(self, button):
+        for f in self.on_button.get(button, []):
             await f()
 
 
@@ -156,6 +173,10 @@ class Robot:
         self.joystick = Joystick()
         self.joystick.register(loop)
         self.joystick.add_button_callback('start', self.start_button)
+        self.joystick.add_button_callback('b1', self.number_button)
+        self.joystick.add_button_callback('b2', self.number_button)
+        self.joystick.add_button_callback('b3', self.number_button)
+        self.joystick.add_button_callback('b4', self.number_button)
         self.joystick.add_axis_callback('x', self.joystick_locomote)
         self.joystick.add_axis_callback('y', self.joystick_locomote)
 
@@ -167,7 +188,12 @@ class Robot:
         self.active_actions = []
 
     def start_button(self, joystick, button, state):
-        self.stop()
+        if state == 1:
+            self.stop()
+    
+    def number_button(self, joystick, button, state):
+        if state == 1 and self.routine:
+            self.initiate_action(self.routine.button(button))
 
     def joystick_locomote(self, joystick, axis, state):
         # Ignore joystick axis inputs when a routine is active
@@ -213,7 +239,8 @@ class Robot:
             writer.write(('ERROR;' + str(e)).encode())
             self.routine = None
         else:
-            self.enqueue_action(self.routine.start())
+            self.initiate_action(self.routine.flush_queue())
+            self.initiate_action(self.routine.start())
             writer.write('OK'.encode())
             await writer.drain()
         writer.close()
@@ -226,12 +253,12 @@ class Robot:
         writer.close()
         await writer.wait_closed()
 
-    def enqueue_action(self, coro):
+    def initiate_action(self, coro):
         action = asyncio.create_task(coro)
         self.active_actions.append(action)
-        action.add_done_callback(self.remove_action)
+        action.add_done_callback(self.complete_action)
 
-    def remove_action(self, action):
+    def complete_action(self, action):
         if action in self.active_actions:
             self.active_actions.remove(action)
 

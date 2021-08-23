@@ -193,7 +193,7 @@ var eventButtonBlock = {
             "check": "Number",
             "value": 1,
             "min": 1,
-            "max": 10,
+            "max": 4,
         },
         {
             "type": "input_statement",
@@ -206,7 +206,7 @@ var eventButtonBlock = {
 Blockly.Blocks['event_button'] = { init: function() { this.jsonInit(eventButtonBlock); } };
 Blockly.Python['event_button'] = function(block) {
     var commands = Blockly.Python.statementToCode(block, 'commands');
-    return '@robot.when_button_pressed(' + block.getFieldValue('button_number') + ')\ndef started():\n' + (commands.length > 0 ? commands : Blockly.Python.INDENT + 'pass\n');
+    return '@robot.when_button_pressed(' + block.getFieldValue('button_number') + ')\ndef button():\n' + (commands.length > 0 ? commands : Blockly.Python.INDENT + 'pass\n');
 };
 
 document.addEventListener('DOMContentLoaded', function(e) {
