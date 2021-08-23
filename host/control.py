@@ -1,9 +1,13 @@
 import array
 import struct
 from fcntl import ioctl
+import hashlib
+import os.path
+import asyncio
 
 import RPi.GPIO as GPIO
 from adafruit_motor import servo
+from google.cloud import texttospeech_v1 as texttospeech
 
 
 class Wheels:
@@ -46,6 +50,24 @@ class Light:
     
     def set(self, state):
         GPIO.output(self.pin_number, state)
+
+
+class Speech:
+    def __init__(self, key_file):
+        self.client = texttospeech.TextToSpeechAsyncClient.from_service_account_file(key_file)
+        self.voice = texttospeech.types.VoiceSelectionParams(language_code='en-US', name="en-US-Wavenet-F")
+        self.config = texttospeech.types.AudioConfig(audio_encoding=texttospeech.types.AudioEncoding.MP3)
+        self.key_file = key_file
+
+    async def synthesize(self, text):
+        cache = '/tmp/speech-%s.mp3' % hashlib.sha1(text.encode('ascii')).hexdigest()
+        if not os.path.exists(cache):
+            speech_input = texttospeech.types.SynthesisInput(text=text)
+            response = await self.client.synthesize_speech(input=speech_input, voice=self.voice, audio_config=self.config)
+            with open(cache, 'wb') as out:
+                out.write(response.audio_content)
+        output = await asyncio.create_subprocess_exec('/usr/bin/mpg321', cache, stdout=asyncio.subprocess.DEVNULL, stderr=asyncio.subprocess.DEVNULL)
+        await output.wait()
 
 
 # Joystick access methods sourced heavily from https://gist.github.com/rdb/8864666 (Public Domain per the Unilicense)

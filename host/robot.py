@@ -6,7 +6,7 @@ import RPi.GPIO as GPIO
 from board import SCL, SDA
 from adafruit_pca9685 import PCA9685
 
-from control import Wheels, Arm, Light, Joystick
+from control import Wheels, Arm, Light, Speech, Joystick
 
 
 class Routine:
@@ -47,9 +47,7 @@ class Routine:
         self.enqueue(asyncio.sleep(secs))
 
     def say(self, message):
-        async def say_async():
-            print(message)
-        self.enqueue(say_async())
+        self.enqueue(self.robot.speech.synthesize(message))
 
     def set_antenna_state(self, side, state):
         if side == 'both':
@@ -160,6 +158,9 @@ class Robot:
         self.joystick.add_button_callback('start', self.start_button)
         self.joystick.add_axis_callback('x', self.joystick_locomote)
         self.joystick.add_axis_callback('y', self.joystick_locomote)
+
+        # Speech
+        self.speech = Speech('/home/pi/.google-key')
 
         self.routine = None
 
