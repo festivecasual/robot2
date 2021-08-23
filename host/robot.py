@@ -100,34 +100,42 @@ class Robot:
     async def handle_connection(self, reader, writer):
         recv = await reader.readline()
         command = recv.decode().strip()
-        print('Incoming Command:', command)
-
-        if command == 'RUN':
-            recv = await reader.readline()
-            size = int(recv.decode().strip())
-
-            recv = await reader.read(size)
-            code = recv.decode()
-
-            self.routine = Routine(self)
-            try:
-                exec(code, {'robot': self.routine})
-            except Exception as e:
-                writer.write(('ERROR;' + str(e)).encode())
-                self.routine = None
-            else:
-                self.enqueue_action(self.routine.start())
-                writer.write('OK'.encode())
-                await writer.drain()
-            writer.close()
-            await writer.wait_closed()
-        elif command == 'STOP':
-            for action in self.active_actions:
-                action.cancel()
-            writer.write('OK'.encode())
+        if command in ('RUN', 'STOP'):
+            await getattr(self, 'handle_' + command)(reader, writer)
+        else:
+            writer.write('ERROR;No such command'.encode())
             await writer.drain()
             writer.close()
             await writer.wait_closed()
+
+    async def handle_RUN(self, reader, writer):
+        recv = await reader.readline()
+        size = int(recv.decode().strip())
+
+        recv = await reader.read(size)
+        code = recv.decode()
+
+        self.routine = Routine(self)
+        try:
+            exec(code, {'robot': self.routine})
+        except Exception as e:
+            writer.write(('ERROR;' + str(e)).encode())
+            self.routine = None
+        else:
+            self.enqueue_action(self.routine.start())
+            writer.write('OK'.encode())
+            await writer.drain()
+        writer.close()
+        await writer.wait_closed()
+
+    async def handle_STOP(self, reader, writer):
+        self.routine = None
+        for action in self.active_actions:
+            action.cancel()
+        writer.write('OK'.encode())
+        await writer.drain()
+        writer.close()
+        await writer.wait_closed()
 
     def enqueue_action(self, coro):
         action = asyncio.create_task(coro)
