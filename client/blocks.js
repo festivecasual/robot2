@@ -22,49 +22,6 @@ Blockly.Python['say'] = function(block) {
     return 'robot.say("' + block.getFieldValue('dialogue') + '")\n';
 };
 
-var lightTestBlock = {
-    "type": "light_test",
-    "message0": "%1 %2 was %3 to start",
-    "args0": [
-        {
-            "type": "field_dropdown",
-            "name": "which_side",
-            "options": [ ["left", "left"], ["right", "right"], ["each", "both"] ],
-        },
-        {
-            "type": "field_dropdown",
-            "name": "which_part",
-            "options": [ ["antenna", "antenna"], ["eye", "eye"] ],
-        },
-        {
-            "type": "field_dropdown",
-            "name": "which",
-            "options": [ ["on", "on"], ["off", "off"] ],
-        },
-    ],
-    "output": "Boolean",
-    "colour": 180,
-    "tooltip": "Check the status of a light.",
-};
-Blockly.Blocks['light_test'] = { init: function() { this.jsonInit(lightTestBlock); } };
-Blockly.Python['light_test'] = function(block) {
-    var which_side = block.getFieldValue('which_side');
-    function test_expression(which_side) {
-        return `robot.get_${block.getFieldValue('which_part')}_state('${which_side}') == '${block.getFieldValue('which')}'`;
-    }
-    if (which_side === 'both') {
-        return [
-            test_expression('left') + ' && ' + test_expression('right'),
-            Blockly.Python.ORDER_RELATIONAL,
-        ];
-    } else {
-        return [
-            test_expression(which_side),
-            Blockly.Python.ORDER_RELATIONAL,
-        ];
-    }
-};
-
 var syncBlock = {
     "type": "sync",
     "message0": "in sync %1",
@@ -116,11 +73,7 @@ Blockly.Python['light_set'] = function(block) {
     function set_expression(which_side) {
         return `robot.set_${block.getFieldValue('which_part')}_state('${which_side}', '${block.getFieldValue('state')}')\n`;
     }
-    if (which_side === 'both') {
-        return set_expression('left') + set_expression('right');
-    } else {
-        return set_expression(which_side);
-    }
+    return set_expression(which_side);
 };
 
 var armMoveBlock = {
@@ -149,11 +102,7 @@ Blockly.Python['move_arm'] = function(block) {
     function move_expression(arm) {
         return `robot.move_arm('${arm}', ${Blockly.Python.valueToCode(block, 'angle', Blockly.Python.ORDER_ATOMIC)})\n`;
     }
-    if (arm === 'both') {
-        return move_expression('left') + move_expression('right');
-    } else {
-        return move_expression(arm);
-    }
+    return move_expression(arm);
 };
 
 var angleBlock = {
@@ -183,7 +132,7 @@ var fixedAngleBlock = {
         {
             "type": "field_dropdown",
             "name": "angle",
-            "options": [ ["up", '0'], ["out", '90'], ["down", '180'] ],
+            "options": [ ["up", '90'], ["out", '0'], ["down", '-90'] ],
         },
     ],
     "output": "Degree",

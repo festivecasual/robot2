@@ -31,7 +31,7 @@ class Routine:
             await coro
         self.action_queue = []
 
-    def sync(self):
+    def in_sync(self):
         routine = self
         class SyncTracker:
             def __enter__(self):
@@ -42,11 +42,79 @@ class Routine:
                     routine.enqueue_synced()
         return SyncTracker()
 
+    def wait(self, secs):
+        self.enqueue(asyncio.sleep(secs))
+
     def say(self, message):
-        async def say_async(msg):
-            await asyncio.sleep(2)
-            print(msg)
-        self.enqueue(say_async(message))
+        async def say_async():
+            print(message)
+        self.enqueue(say_async())
+
+    def set_antenna_state(self, side, state):
+        if side == 'both':
+            with self.in_sync():
+                self.set_antenna_state('left', state)
+                self.set_antenna_state('right', state)
+            return
+        elif side == 'left':
+            antenna = self.robot.left_antenna
+        elif side == 'right':
+            antenna = self.robot.right_antenna
+        else:
+            raise NameError('No such antenna: ' + side)
+
+        if state == 'on':
+            value = GPIO.HIGH
+        elif state == 'off':
+            value = GPIO.LOW
+        else:
+            raise NameError('No such antenna state: ' + state)
+
+        async def set_antenna_state_async():
+            antenna.set(value)
+        self.enqueue(set_antenna_state_async())
+
+    def set_eye_state(self, side, state):
+        if side == 'both':
+            with self.in_sync():
+                self.set_eye_state('left', state)
+                self.set_eye_state('right', state)
+            return
+        elif side == 'left':
+            eye = self.robot.left_eye
+        elif side == 'right':
+            eye = self.robot.right_eye
+        else:
+            raise NameError('No such eye: ' + side)
+
+        if state == 'on':
+            value = GPIO.HIGH
+        elif state == 'off':
+            value = GPIO.LOW
+        else:
+            raise NameError('No such eye state: ' + state)
+
+        async def set_eye_state_async():
+            eye.set(value)
+        self.enqueue(set_eye_state_async())
+
+    def move_arm(self, side, angle):
+        if side == 'both':
+            with self.in_sync():
+                self.move_arm('left', angle)
+                self.move_arm('right', angle)
+            return
+        elif side == 'left':
+            arm = self.robot.left_arm
+        elif side == 'right':
+            arm = self.robot.right_arm
+        else:
+            raise NameError('No such arm: ' + side)
+        
+        async def move_arm_async():
+            arm.move(angle)
+            await asyncio.sleep(0.5)
+        self.enqueue(move_arm_async())
 
     def when_started(self, f):
         async def event_function():
@@ -150,19 +218,28 @@ class Robot:
 program = """
 @robot.when_started
 def started():
-    robot.say('1-hi')
-    with robot.sync():
-        robot.say('1-aloha')
-        robot.say('1-whazzup')
-    robot.say('1-bye')
-
-@robot.when_started
-def started():
-    robot.say('2-hi')
-    with robot.sync():
-        robot.say('2-aloha')
-        robot.say('2-whazzup')
-    robot.say('2-bye')
+    robot.say('HI')
+    robot.wait(2)
+    robot.set_antenna_state('both', 'on')
+    robot.set_eye_state('both', 'on')
+    robot.wait(1)
+    robot.move_arm('both', 90)
+    robot.wait(1)
+    with robot.in_sync():
+        robot.say('  LEFT')
+        robot.set_antenna_state('left', 'off')
+        robot.set_eye_state('left', 'off')
+        robot.move_arm('left', -90)
+    robot.say('  ... done!')
+    robot.wait(1)
+    with robot.in_sync():
+        robot.say('  RIGHT')
+        robot.set_antenna_state('right', 'off')
+        robot.set_eye_state('right', 'off')
+        robot.move_arm('right', -90)
+    robot.say('  ... done!')
+    robot.wait(2)
+    robot.say('BYE')
 """
 
 

@@ -43,6 +43,9 @@ class Light:
     
     def off(self):
         GPIO.output(self.pin_number, GPIO.LOW)
+    
+    def set(self, state):
+        GPIO.output(self.pin_number, state)
 
 
 # Joystick access methods sourced heavily from https://gist.github.com/rdb/8864666 (Public Domain per the Unilicense)
