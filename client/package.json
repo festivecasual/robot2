@@ -13,5 +13,9 @@
     "start": "parcel index.html"
   },
   "author": "",
-  "license": "BSD-2-Clause"
+  "license": "BSD-2-Clause",
+  "devDependencies": {
+    "cssnano": "^5.0.8",
+    "postcss": "^8.3.6"
+  }
 }
