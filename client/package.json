@@ -1,21 +1,20 @@
 {
-  "name": "roboblocks",
+  "name": "rosie",
   "version": "1.0.0",
-  "description": "roboblocks",
-  "main": "blocks.js",
+  "description": "ROSie",
   "dependencies": {
     "axios": "^0.21.1",
-    "blockly": "",
+    "blockly": "^6.20210701.0",
+    "bulma": "^0.9.3",
+    "proto": "^1.0.19",
     "vue": "^2.6.14"
   },
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "parcel index.html"
-  },
+  "scripts": {},
   "author": "",
   "license": "BSD-2-Clause",
   "devDependencies": {
-    "cssnano": "^5.0.8",
-    "postcss": "^8.3.6"
+    "cssnano": "^4.1.11",
+    "postcss": "^8.3.6",
+    "sass": "^1.38.1"
   }
 }

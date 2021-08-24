@@ -234,7 +234,7 @@ class Robot:
         w = x_vector * (2 - abs(y_vector))
         L = (v - w) / 2.0
         R = (v + w) / 2.0
-        self.wheels.go(2 * L, 2 * R)
+        self.wheels.go(L, R)
 
     def stop(self):
         self.routine = None
