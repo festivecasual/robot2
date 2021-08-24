@@ -1,4 +1,6 @@
 import * as Blockly from 'blockly';
+import Vue from 'vue/dist/vue.js';
+import axios from 'axios';
 Blockly.Python = require('blockly/python');
 
 
@@ -279,7 +281,7 @@ document.addEventListener('DOMContentLoaded', function(e) {
     var blocklyDiv = document.getElementById('blocklyDiv');
     var workspace = Blockly.inject('blocklyDiv',
         {toolbox: document.getElementById('toolbox')});
-    var runProgram = function() {
+    function runProgram() {
         alert(Blockly.Python.workspaceToCode(workspace));
     };
     document.getElementById('run').addEventListener('click', function(e){runProgram();}, false);
@@ -304,13 +306,67 @@ document.addEventListener('DOMContentLoaded', function(e) {
     blocklyResize();
     Blockly.svgResize(workspace);
 
+    var app = new Vue({
+        el: '#slots',
+        data: {
+            slots: [
+                {name: 'Slot 1', data: '<xml xmlns="https://developers.google.com/blockly/xml"><block type="event_started" x="250" y="58"><statement name="commands"><block type="say"><field name="dialogue">something</field></block></statement></block></xml>'},
+                {name: 'Slot 2', data: '<xml xmlns="https://developers.google.com/blockly/xml"><block type="event_started" x="250" y="58"><statement name="commands"><block type="say"><field name="dialogue">anything</field></block></statement></block></xml>'},
+                {name: 'Slot 3', data: ''},
+                {name: 'Slot 4', data: ''},
+                {name: 'Slot 5', data: ''},
+            ],
+            activeIndex: 0,
+        },
+        computed: {
+            active() {
+                return this.slots[this.activeIndex];
+            },
+        },
+        methods: {
+            switchActive(slot) {
+                var index = this.slots.indexOf(slot);
+                if (index > -1) {
+                    this.activeIndex = index;
+                } else {
+                    this.activeIndex = 0;
+                }
+                this.updateWorkspace();
+            },
+            updateWorkspace() {
+                workspace.clear();
+                if (this.slots[this.activeIndex].data) {
+                    var xml = Blockly.Xml.textToDom(this.slots[this.activeIndex].data);
+                    Blockly.Xml.domToWorkspace(xml, workspace);
+                }
+            },
+            saveActive() {
+                var xml = Blockly.Xml.workspaceToDom(workspace, true);
+                var data = Blockly.Xml.domToText(xml);
+                if (data != this.slots[this.activeIndex].data) {
+                    this.slots[this.activeIndex].data = data;
+                    console.log('SAVE index = ' + this.activeIndex + ', data = ' + data);
+                }
+            },
+        },
+        watch: {
+            slots(newSlots, oldSlots) {
+                if (newSlots[this.activeIndex].name != oldSlots[this.activeIndex].name) {
+                    this.activeIndex = 0;
+                }
+                this.updateWorkspace();
+            },
+        },
+        mounted() {
+            this.updateWorkspace();
+        },
+    });
+
     workspace.addChangeListener(function(e){
-        if (e.isUiEvent) {
+        if (e.isUiEvent || e.type == Blockly.Events.FINISHED_LOADING) {
             return;
         } else {
-            var xml = Blockly.Xml.workspaceToDom(workspace, true);
-            var data = Blockly.Xml.domToText(xml);
-            alert(data);
+            app.saveActive();
         }
     });
 }, false);

@@ -1,7 +1,7 @@
 import asyncio
 
 
-program = """
+program1 = """
 @robot.when_started
 def started():
     with robot.in_sync():
@@ -43,7 +43,7 @@ def button():
 """
 
 
-program2 = """
+program = """
 @robot.when_started
 def started():
     robot.say("Let's get started.")

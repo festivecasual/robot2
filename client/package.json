@@ -4,7 +4,9 @@
   "description": "roboblocks",
   "main": "blocks.js",
   "dependencies": {
-    "blockly": ""
+    "axios": "^0.21.1",
+    "blockly": "",
+    "vue": "^2.6.14"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
