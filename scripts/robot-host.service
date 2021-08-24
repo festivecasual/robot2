@@ -1,0 +1,13 @@
+[Unit]
+Description=Robot Host (robot/host)
+After=network.target
+
+[Service]
+User=pi
+Group=pi
+WorkingDirectory=/home/pi/robot/host
+ExecStart=/home/pi/robot/host/venv/bin/python3 robot.py
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target

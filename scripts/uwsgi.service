@@ -1,0 +1,13 @@
+[Unit]
+Description=uwsgi (robot/server)
+After=network.target
+
+[Service]
+User=pi
+Group=pi
+WorkingDirectory=/home/pi/robot/server
+ExecStart=/home/pi/robot/server/venv/bin/uwsgi -c uwsgi.ini
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target

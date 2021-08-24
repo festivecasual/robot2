@@ -1,5 +1,4 @@
 import asyncio
-import sys
 
 import busio
 import RPi.GPIO as GPIO
@@ -294,10 +293,6 @@ class Robot:
 async def main():
     loop = asyncio.get_event_loop()
     robot = Robot(loop)
-
-    if len(sys.argv) > 1 and sys.argv[1] == 'test_program':
-        import test
-        asyncio.create_task(test.client_run_command())
 
     server = await asyncio.start_unix_server(robot.handle_connection, '/tmp/robot-control')
     async with server:
