@@ -1,4 +1,5 @@
 import asyncio
+import subprocess
 
 import busio
 import RPi.GPIO as GPIO
@@ -200,6 +201,7 @@ class Robot:
         self.joystick = Joystick()
         self.joystick.register(loop)
         self.joystick.add_button_callback('start', self.start_button)
+        self.joystick.add_button_callback('select', self.select_button)
         self.joystick.add_button_callback('b1', self.number_button)
         self.joystick.add_button_callback('b2', self.number_button)
         self.joystick.add_button_callback('b3', self.number_button)
@@ -217,6 +219,11 @@ class Robot:
     def start_button(self, joystick, button, state):
         if state == 1:
             self.stop()
+
+    def select_button(self, joystick, button, state):
+        if state == 1:
+            subprocess.run(['mpg321', 'media/bleep.mp3'])
+            subprocess.run(['sudo', 'poweroff'])
     
     def number_button(self, joystick, button, state):
         if state == 1 and self.routine:
